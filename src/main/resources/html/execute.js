@@ -1,0 +1,80 @@
+(function(){
+
+	var prefix="_";
+	var paramUrlName="execute_xiangpian_url";
+	var dataUrlName="data-execute-xiangpian-url";
+
+	//get websocket url in url parameter
+	var paramUrl=(function(){
+		var getParameters=function(){
+			var data={};
+			var params=window.location.search.replace(/^\?/,"").split("&");
+			for(var i=0;i<params.length;i++){
+				var keyvalue=params[i].split("=");
+				if(keyvalue.length!=2){continue;}
+				var key=decodeURIComponent(keyvalue[0]);
+				var value=decodeURIComponent(keyvalue[1]);
+				if(!data.hasOwnProperty(key)){
+					data[key]=[];
+				}
+				data[key].push(value);
+			}
+			return data;
+		};
+		var params=getParameters();
+		return (paramUrlName in params)?params[paramUrlName][0]:void(0);
+	})();
+
+	//get websocket url in custom data attribute
+	var dataUrl=(function(){
+		var scripts=document.getElementsByTagName("script");
+		if(scripts.length=0){return void(0);}
+		var script=scripts[scripts.length-1];
+		return script.getAttribute(dataUrlName);
+	})();
+
+	//setting websocket
+	function onOpenWebSocket(){
+		ws.send("open");
+	}
+	function onMessageWebSocket(evt){
+		var command=evt.data;
+		try{
+			eval.call(window,command);
+		}catch(e){
+			ws.send(e);
+		}
+	}
+	function onUnloadWindow(){
+		ws.close();
+	}
+	var wsUrl=paramUrl||dataUrl;
+	var ws=new WebSocket(wsUrl,"client_side");
+	ws.addEventListener("open",onOpenWebSocket,false);
+	ws.addEventListener("message",onMessageWebSocket,false);
+	window.addEventListener("unload",onUnloadWindow,false);
+
+	//make console wrapper
+	(function(){
+		var keys=[];
+		for(var key in console){
+			keys.push(key);
+		}
+		var handler=function(key){
+			return function(){
+				console[prefix+key].apply(console,arguments);
+				ws.send(JSON.stringify(
+						{
+							"method name":key,
+							"arguments":Array.prototype.slice.apply(arguments,[])
+						}
+				));
+			};
+		};
+		keys.forEach(function(key){
+			console[prefix+key]=console[key];
+			console[key]=handler(key);
+		});
+	})();
+
+})();

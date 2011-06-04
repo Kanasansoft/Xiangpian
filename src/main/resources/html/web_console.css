@@ -1,0 +1,87 @@
+*{
+	margin:0;
+	padding:0;outline:0;
+}
+html{
+	height:100%;
+}
+body{
+	height:100%;
+}
+#main{
+	width:100%;
+	height:100%;
+	border-collapse:separate;
+	border-spacing:10px;
+}
+#message{
+	width:50%;
+	border:1px solid #999999;
+	vertical-align:top;
+}
+#control{
+	width:50%;
+	border:1px solid #999999;
+	vertical-align:top;
+}
+#message_separator{
+	width:100%;
+	height:100%;
+	border-collapse:separate;
+	border-spacing:0px;
+}
+#control_separator{
+	width:100%;
+	height:100%;
+	border-collapse:separate;
+	border-spacing:0px;
+}
+#message_buttons{
+	height:30px;
+	vertical-align:top;
+}
+#receive_messages_outer{
+	vertical-align:top;
+}
+#receive_messages{
+	width:100%;
+	height:100%;
+	word-break:break-all;
+	overflow:scroll;
+}
+#code_area{
+	vertical-align:top;
+}
+#code{display:block;
+	width:100%;
+	height:100%;
+	border:0 none transparent;
+}
+#control_buttons{
+	height:30px;
+	vertical-align:top;
+}
+.btn{
+	color:#000000;
+	background-color:#eeeeee;
+	padding:0px 10px;
+	height:30px;
+	border-radius:5px;
+}
+.btns{
+	background-color:#eeeeee;
+}
+.receive_command{
+	border:0px none transparent;
+	border-bottom:1px solid #cccccc;
+	margin:0px;
+	color:#000000;
+	background-color:#ffffcc;
+}
+.receive_result{
+	border:0px none transparent;
+	border-bottom:1px solid #cccccc;
+	margin:0px;
+	color:#009900;
+	background-color:#ffffcc;
+}

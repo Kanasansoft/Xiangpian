@@ -1,11 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>com.kanasansoft.xiangpian</groupId>
-  <artifactId>xiangpian</artifactId>
-  <name>xiangpian</name>
+  <groupId>com.kanasansoft.Xiangpian</groupId>
+  <artifactId>Xiangpian</artifactId>
+  <name>Xiangpian</name>
   <version>0.0.1-SNAPSHOT</version>
   <properties>
-    <package.package-name>com.kanasansoft.xiangpian</package.package-name>
+    <package.package-name>com.kanasansoft.Xiangpian</package.package-name>
     <package.main-class>${package.package-name}.${name}</package.main-class>
     <package.base-name>${name}-${version}</package.base-name>
     <package.jar-name>${package.base-name}.jar</package.jar-name>
@@ -13,9 +13,9 @@
     <package.app-name>${package.base-name}.app</package.app-name>
   </properties>
   <scm>
-    <connection>scm:git:git@github.com:Kanasansoft/xiangpian.git</connection>
-    <url>scm:git:git@github.com:Kanasansoft/xiangpian.git</url>
-    <developerConnection>scm:git:git@github.com:Kanasansoft/xiangpian.git</developerConnection>	
+    <connection>scm:git:git@github.com:Kanasansoft/Xiangpian.git</connection>
+    <url>scm:git:git@github.com:Kanasansoft/Xiangpian.git</url>
+    <developerConnection>scm:git:git@github.com:Kanasansoft/Xiangpian.git</developerConnection>
   </scm>
   <build>
     <plugins>
@@ -151,6 +151,16 @@
       <groupId>org.eclipse.jetty</groupId>
       <artifactId>jetty-websocket</artifactId>
       <version>7.1.6.v20100715</version>
+    </dependency>
+    <dependency>
+      <groupId>uk.co.flamingpenguin.jewelcli</groupId>
+      <artifactId>jewelcli</artifactId>
+      <version>0.6</version>
+    </dependency>
+    <dependency>
+      <groupId>org.sonatype.jline</groupId>
+      <artifactId>jline</artifactId>
+      <version>2.5</version>
     </dependency>
   </dependencies>
 </project>
