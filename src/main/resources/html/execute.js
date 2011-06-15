@@ -1,8 +1,39 @@
 (function(){
 
-	var prefix="_";
+	var prefix="_xiangpian_";
 	var paramUrlName="execute_xiangpian_url";
 	var dataUrlName="data-execute-xiangpian-url";
+	var firstFlag=true;
+
+	//make console wrapper
+	(function(){
+		var re=new RegExp("^"+prefix);
+		var keys=[];
+		for(var key in console){
+			if(re.test(key)){
+				firstFlag=false;
+				return;
+			}
+			keys.push(key);
+		}
+		var handler=function(key){
+			return function(){
+				console[prefix+key].apply(console,arguments);
+				ws.send(JSON.stringify(
+						{
+							"method name":key,
+							"arguments":Array.prototype.slice.apply(arguments,[])
+						}
+				));
+			};
+		};
+		keys.forEach(function(key){
+			console[prefix+key]=console[key];
+			console[key]=handler(key);
+		});
+	})();
+
+	if(!firstFlag){return;}
 
 	//get websocket url in url parameter
 	var paramUrl=(function(){
@@ -53,28 +84,5 @@
 	ws.addEventListener("open",onOpenWebSocket,false);
 	ws.addEventListener("message",onMessageWebSocket,false);
 	window.addEventListener("unload",onUnloadWindow,false);
-
-	//make console wrapper
-	(function(){
-		var keys=[];
-		for(var key in console){
-			keys.push(key);
-		}
-		var handler=function(key){
-			return function(){
-				console[prefix+key].apply(console,arguments);
-				ws.send(JSON.stringify(
-						{
-							"method name":key,
-							"arguments":Array.prototype.slice.apply(arguments,[])
-						}
-				));
-			};
-		};
-		keys.forEach(function(key){
-			console[prefix+key]=console[key];
-			console[key]=handler(key);
-		});
-	})();
 
 })();
