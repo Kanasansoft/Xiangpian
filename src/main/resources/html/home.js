@@ -8,7 +8,8 @@ function initial(){
 		'var script=document.createElement("script");',
 		'script.type="text/javascript";',
 		'script.src="'+jsurl+'";',
-		'script.setAttribute("data-execute-xiangpian-url","'+wsurl+'");',
+		'script.setAttribute("data-xiangpian-execute-url","'+wsurl+'");',
+		'script.setAttribute("data-xiangpian-execute_from","bookmarklet");',
 		'document.body.appendChild(script);',
 		'})();'
 	];
