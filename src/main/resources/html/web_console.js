@@ -26,6 +26,18 @@ function sendCode(){
 	}
 	elemCode.focus();
 }
+function reflectOldCommand(){
+	var value=elemCode.value;
+	var text=this.textContent;
+	if(value.length!=0&&!(/(\r|\n)/.test(value.slice(-1)))){
+		text="\n"+text;
+	}
+	if(!(/(\r|\n)/.test(text.slice(-1)))){
+		text=text+"\n";
+	}
+	elemCode.value+=text;
+	elemCode.focus();
+}
 function clearMessages(){
 	while(elemReceiveMessages.hasChildNodes()){
 		elemReceiveMessages.removeChild(elemReceiveMessages.firstChild);
@@ -47,6 +59,8 @@ function onMessageCommand(evt){
 	var elem=document.createElement("div");
 	elem.className="receive_command";
 	elem.textContent=message;
+	elem.style.cursor="pointer";
+	elem.addEventListener("click",reflectOldCommand,false);
 	elemReceiveMessages.appendChild(elem);
 }
 function onMessageResult(evt){
