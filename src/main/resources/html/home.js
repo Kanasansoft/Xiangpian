@@ -6,8 +6,8 @@ function initial(){
 	var bookmarklets=[
 		'(function(){',
 		'var script=document.createElement("script");',
-		'script.type="text/javascript";',
-		'script.src="'+jsurl+'";',
+		'script.setAttribute("type","text/javascript");',
+		'script.setAttribute("src","'+jsurl+'");',
 		'script.setAttribute("data-xiangpian-execute-url","'+wsurl+'");',
 		'script.setAttribute("data-xiangpian-execute_from","bookmarklet");',
 		'document.body.appendChild(script);',
