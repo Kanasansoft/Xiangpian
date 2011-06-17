@@ -1,6 +1,7 @@
 package com.kanasansoft.Xiangpian;
 
 import java.io.IOException;
+import java.util.HashMap;
 
 import jline.console.ConsoleReader;
 
@@ -11,11 +12,34 @@ class CUI implements MessageListener {
 	private CommandLineOption options = null;
 	private ConsoleReader cons = null;
 
+	enum STYLE {COMMAND,EXTERNAL_COMMAND,RESULT,IRREGULAR_MESSAGE,END}
+
+	HashMap<Boolean,HashMap<STYLE,String>> styles=new HashMap<Boolean,HashMap<STYLE,String>>(){{
+		put(false,new HashMap<STYLE,String>(){{
+			put(STYLE.COMMAND,"");
+			put(STYLE.EXTERNAL_COMMAND,"");
+			put(STYLE.RESULT,"");
+			put(STYLE.IRREGULAR_MESSAGE,"");
+			put(STYLE.END,"");
+		}});
+		put(true,new HashMap<STYLE,String>(){{
+			put(STYLE.COMMAND,"\u001B[32m");
+			put(STYLE.EXTERNAL_COMMAND,"\u001B[32m");
+			put(STYLE.RESULT,"\u001B[31m");
+			put(STYLE.IRREGULAR_MESSAGE,"\u001B[41m\u001B[37m");
+			put(STYLE.END,"\u001B[0m");
+		}});
+	}};
+
+	HashMap<STYLE,String> style=null;
+
 	CUI(String[] args) throws Exception {
 
 		super();
 
 		options=Utility.parseCommandLineOption(args);
+
+		style=styles.get(options.isColor());
 
 		Core core = new Core(args);
 
@@ -38,18 +62,22 @@ class CUI implements MessageListener {
 	public void onMessage(String connectionType, byte frame, String data) {
 		try{
 			if("console".equals(connectionType)){
-				cons.println("command> " + data);
+				cons.println(style.get(STYLE.COMMAND)+"command>"+style.get(STYLE.END));
+				cons.println(style.get(STYLE.COMMAND)+data+style.get(STYLE.END));
 			}else if("server_side_command".equals(connectionType)){
 				cons.println();
-				cons.println("external command> " + data);
+				cons.println(style.get(STYLE.EXTERNAL_COMMAND)+"external command>"+style.get(STYLE.END));
+				cons.println(style.get(STYLE.EXTERNAL_COMMAND)+data+style.get(STYLE.END));
 				cons.drawLine();
 			}else if("client_side".equals(connectionType)){
 				cons.println();
-				cons.println("result> " + data);
+				cons.println(style.get(STYLE.RESULT)+"result>"+style.get(STYLE.END));
+				cons.println(style.get(STYLE.RESULT)+data+style.get(STYLE.END));
 				cons.drawLine();
 			}else{
 				cons.println();
-				cons.println("irregular message(" + connectionType + ")> " + data);
+				cons.println(style.get(STYLE.IRREGULAR_MESSAGE)+"irregular message(" + connectionType + ")>"+style.get(STYLE.END));
+				cons.println(style.get(STYLE.IRREGULAR_MESSAGE)+data+style.get(STYLE.END));
 				cons.drawLine();
 			}
 			cons.flush();

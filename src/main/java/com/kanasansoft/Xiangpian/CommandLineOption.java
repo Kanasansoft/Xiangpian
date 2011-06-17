@@ -10,6 +10,9 @@ interface CommandLineOption {
 	@Option(shortName="p",longName="port",defaultValue="40320",description="specify port number")
 	int getPortNumber();
 
+	@Option(shortName="c",longName="color",description="display color")
+	boolean isColor();
+
     @Option(shortName="s", longName="stop-external", description="stop execute external command from websocket")
     boolean isStopExternal();
 
