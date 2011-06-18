@@ -1,12 +1,16 @@
 package com.kanasansoft.Xiangpian;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+
+import net.arnx.jsonic.JSON;
+import net.arnx.jsonic.JSONException;
 
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
@@ -18,6 +22,76 @@ import org.eclipse.jetty.websocket.WebSocket;
 import org.eclipse.jetty.websocket.WebSocketServlet;
 
 public class Core {
+
+	enum MESSAGE_TYPE {
+		COMMAND("command"),RESULT("result"),CONSOLE("console"),STATUS("status"),ERROR("error");
+		private String string;
+		private MESSAGE_TYPE(String string){
+			this.string=string;
+		}
+		public String toString(){
+			return string;
+		}
+		public static MESSAGE_TYPE get(String string){
+			for(MESSAGE_TYPE type:MESSAGE_TYPE.values()){
+				if(type.name().equalsIgnoreCase(string)){
+					return type;
+				}
+			}
+			return null;
+		}
+		public static String getName(){
+			return "message_type";
+		}
+	}
+
+	enum CONNECTION_TYPE {
+		LISTENER("listener"),CONTROLLER("controller"),CONTROLLED("controlled");
+		private String string;
+		private CONNECTION_TYPE(String string){
+			this.string=string;
+		}
+		public String toString(){
+			return string.toLowerCase();
+		}
+		public static CONNECTION_TYPE get(String string){
+			for(CONNECTION_TYPE type:CONNECTION_TYPE.values()){
+				if(type.name().equalsIgnoreCase(string)){
+					return type;
+				}
+			}
+			return null;
+		}
+		public static String getName(){
+			return "connection_type";
+		}
+	}
+
+	class SendData {
+		private MESSAGE_TYPE messageType=null;
+		private String data=null;
+		SendData(MESSAGE_TYPE messageType,String data){
+			this.messageType=messageType;
+			this.data=data;
+		}
+		SendData(String json){
+			HashMap<String,String> map=JSON.decode(json,HashMap.class);
+			this.messageType=MESSAGE_TYPE.get(map.get(MESSAGE_TYPE.getName()));
+			this.data=map.get("data");
+		}
+		public MESSAGE_TYPE getMessageType() {
+			return messageType;
+		}
+		public String getData() {
+			return data;
+		}
+		public String toString(){
+			HashMap<String, String> map = new HashMap<String,String>();
+			map.put(MESSAGE_TYPE.getName(), messageType.toString());
+			map.put("data", data);
+			return JSON.encode(map);
+		}
+	}
 
 	private WebSocketServletWithConnectionType wsServletWithConnectionType = null;
 	private static Set<WebSocketWithConnectionType> clients = new CopyOnWriteArraySet<WebSocketWithConnectionType>();
@@ -66,46 +140,48 @@ public class Core {
 
 	}
 
-	void onMessage(String connectionType, byte frame, String data) {
-		if(listener!=null){
-			listener.onMessage(connectionType, frame, data);
-		}
-		wsServletWithConnectionType.sendMessageForConnectionType("server_side_command", frame, data);
-		wsServletWithConnectionType.sendMessageForConnectionType("client_side", frame, data);
-	}
+	void onMessage(String data) {
 
-	void onMessage(String connectionType, byte frame, byte[] data, int offset, int length) {
+		SendData sendData = new SendData(MESSAGE_TYPE.COMMAND,data);
+		String sendString = sendData.toString();
+
 		if(listener!=null){
-			listener.onMessage(connectionType, frame, data, offset, length);
+			listener.onMessage(CONNECTION_TYPE.LISTENER, sendData);
 		}
-		wsServletWithConnectionType.sendMessageForConnectionType("server_side_command", frame, data, offset, length);
-		wsServletWithConnectionType.sendMessageForConnectionType("client_side", frame, data, offset, length);
+		wsServletWithConnectionType.sendMessageForConnectionType(CONNECTION_TYPE.CONTROLLER.toString(), sendString);
+		wsServletWithConnectionType.sendMessageForConnectionType(CONNECTION_TYPE.CONTROLLED.toString(), sendString);
+
 	}
 
 	void onMessageFromWebSocket(String connectionType, byte frame, String data) {
+
+		SendData sendData=null;
+
+		try {
+			sendData=new SendData(data);
+		} catch (JSONException e) {
+			e.printStackTrace();
+			System.out.println(data);
+			return;
+		}
+
+		CONNECTION_TYPE ctype=CONNECTION_TYPE.get(connectionType);
+		MESSAGE_TYPE mtype=sendData.getMessageType();
+
 		if(listener!=null){
-			listener.onMessage(connectionType, frame, data);
+			listener.onMessage(ctype, sendData);
 		}
-		if("client_side".equals(connectionType)){
-			wsServletWithConnectionType.sendMessageForConnectionType("server_side_result", frame, data);
+		wsServletWithConnectionType.sendMessageForConnectionType(CONNECTION_TYPE.CONTROLLER.toString(), data);
+		if(		CONNECTION_TYPE.CONTROLLER.equals(ctype)	&&
+				MESSAGE_TYPE.COMMAND.equals(mtype)			&&
+				!options.isStopExternal()
+		){
+			wsServletWithConnectionType.sendMessageForConnectionType(CONNECTION_TYPE.CONTROLLED.toString(), data);
 		}
-		if("server_side_command".equals(connectionType)&&!options.isStopExternal()){
-			wsServletWithConnectionType.sendMessageForConnectionType("server_side_command", frame, data);
-			wsServletWithConnectionType.sendMessageForConnectionType("client_side", frame, data);
-		}
+
 	}
 
 	void onMessageFromWebSocket(String connectionType, byte frame, byte[] data, int offset, int length) {
-		if(listener!=null){
-			listener.onMessage(connectionType, frame, data, offset, length);
-		}
-		if("client_side".equals(connectionType)){
-			wsServletWithConnectionType.sendMessageForConnectionType("server_side", frame, data, offset, length);
-		}
-		if("server_side".equals(connectionType)&&!options.isStopExternal()){
-			wsServletWithConnectionType.sendMessageForConnectionType("server_side", frame, data, offset, length);
-			wsServletWithConnectionType.sendMessageForConnectionType("client_side", frame, data, offset, length);
-		}
 	}
 
 	class WebSocketServletWithConnectionType extends WebSocketServlet {
@@ -142,51 +218,9 @@ public class Core {
 			Core.this.onMessageFromWebSocket(webSocketWithConnectionType.getConnectionType(), frame, data, offset, length);
 		}
 
-		void sendMessageAll(byte frame, byte[] data) {
-			for(WebSocketWithConnectionType client : clients){
-				client.sendMessage(frame, data);
-			}
-		}
-
-		void sendMessageAll(byte frame, byte[] data, int offset, int length) {
-			for(WebSocketWithConnectionType client : clients){
-				client.sendMessage(frame, data, offset, length);
-			}
-		}
-
-		void sendMessageAll(byte frame, String data) {
-			for(WebSocketWithConnectionType client : clients){
-				client.sendMessage(frame, data);
-			}
-		}
-
 		void sendMessageAll(String data) {
 			for(WebSocketWithConnectionType client : clients){
 				client.sendMessage(data);
-			}
-		}
-
-		void sendMessageForConnectionType(String connectionType, byte frame, byte[] data) {
-			for(WebSocketWithConnectionType client : clients){
-				if(Utility.equalsWithNull(connectionType, client.getConnectionType())){
-					client.sendMessage(frame, data);
-				}
-			}
-		}
-
-		void sendMessageForConnectionType(String connectionType, byte frame, byte[] data, int offset, int length) {
-			for(WebSocketWithConnectionType client : clients){
-				if(Utility.equalsWithNull(connectionType, client.getConnectionType())){
-					client.sendMessage(frame, data, offset, length);
-				}
-			}
-		}
-
-		void sendMessageForConnectionType(String connectionType, byte frame, String data) {
-			for(WebSocketWithConnectionType client : clients){
-				if(Utility.equalsWithNull(connectionType, client.getConnectionType())){
-					client.sendMessage(frame, data);
-				}
 			}
 		}
 
@@ -214,39 +248,6 @@ public class Core {
 
 		String getConnectionType() {
 			return connectionType;
-		}
-
-		boolean sendMessage(byte frame, byte[] data) {
-			if(outbound==null){return false;}
-			try {
-				outbound.sendMessage(frame, data);
-			} catch (IOException e) {
-				e.printStackTrace();
-				return false;
-			}
-			return true;
-		}
-
-		boolean sendMessage(byte frame, byte[] data, int offset, int length) {
-			if(outbound==null){return false;}
-			try {
-				outbound.sendMessage(frame, data, offset, length);
-			} catch (IOException e) {
-				e.printStackTrace();
-				return false;
-			}
-			return true;
-		}
-
-		boolean sendMessage(byte frame, String data) {
-			if(outbound==null){return false;}
-			try {
-				outbound.sendMessage(frame, data);
-			} catch (IOException e) {
-				e.printStackTrace();
-				return false;
-			}
-			return true;
 		}
 
 		boolean sendMessage(String data) {

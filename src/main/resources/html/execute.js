@@ -63,13 +63,14 @@
 		}
 		var handler=function(key){
 			return function(){
-				console[prefix+key].apply(console,arguments);
-				ws.send(JSON.stringify(
-						{
-							"method name":key,
-							"arguments":Array.prototype.slice.apply(arguments,[])
-						}
-				));
+				var args=Array.prototype.slice.apply(arguments,[]);
+				var result=console[prefix+key].apply(console,arguments);
+				var json=JSON.stringify({
+					"method name":key,
+					"arguments":args
+				});
+				send("console",json);
+				return result||args;
 			};
 		};
 		keys.forEach(function(key){
@@ -82,22 +83,33 @@
 		return;
 	}
 
+	function send(messageType,data){
+		ws.send(JSON.stringify(
+			{
+				"message_type":messageType,
+				"data":data
+			}
+		));
+	}
+
 	//setting websocket
 	function onOpenWebSocket(){
-		ws.send("open");
+		send("status","open");
 	}
 	function onMessageWebSocket(evt){
-		var command=evt.data;
+		var data=JSON.parse(evt.data);
+		if(data.message_type!="command"){return;}
+		var command=data.data;
 		try{
-			eval.call(window,command);
+			send("result",JSON.stringify(eval.call(window,command)));
 		}catch(e){
-			ws.send(e);
+			send("error",e.toString());
 		}
 	}
 	function onUnloadWindow(){
 		ws.close();
 	}
-	var ws=new WebSocket(wsUrl,"client_side");
+	var ws=new WebSocket(wsUrl,"controlled");
 	ws.addEventListener("open",onOpenWebSocket,false);
 	ws.addEventListener("message",onMessageWebSocket,false);
 	window.addEventListener("unload",onUnloadWindow,false);

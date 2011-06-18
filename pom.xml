@@ -162,5 +162,12 @@
       <artifactId>jline</artifactId>
       <version>2.5</version>
     </dependency>
+    <dependency>
+      <groupId>net.arnx.jsonic</groupId>
+      <artifactId>jsonic</artifactId>
+      <version>1.2.0</version>
+      <type>jar</type>
+      <scope>compile</scope>
+    </dependency>
   </dependencies>
 </project>

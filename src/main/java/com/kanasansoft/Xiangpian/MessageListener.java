@@ -1,6 +1,8 @@
 package com.kanasansoft.Xiangpian;
 
+import com.kanasansoft.Xiangpian.Core.CONNECTION_TYPE;
+import com.kanasansoft.Xiangpian.Core.SendData;
+
 public interface MessageListener {
-	void onMessage(String connectionType, byte frame, String data);
-	void onMessage(String connectionType, byte frame, byte[] data, int offset, int length);
+	void onMessage(CONNECTION_TYPE connectionType, SendData data);
 }

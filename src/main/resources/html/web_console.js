@@ -1,6 +1,5 @@
 var parameters;
-var commandWS;
-var resultWS;
+var ws;
 var elemReceiveMessages;
 var elemCode;
 
@@ -19,9 +18,17 @@ function getParameters(){
 	}
 	return data;
 }
+function send(messageType,data){
+	ws.send(JSON.stringify(
+		{
+			"message_type":messageType,
+			"data":data
+		}
+	));
+}
 function sendCode(){
 	if(elemCode.value!=""){
-		commandWS.send(elemCode.value);
+		send("command",elemCode.value);
 		elemCode.value="";
 	}
 	elemCode.focus();
@@ -54,36 +61,29 @@ function onOpenCommand(){
 	document.getElementById("btn_messages_clear").addEventListener("click",clearMessages,false);
 	elemCode.addEventListener("keydown",onControlEnter,false);
 }
-function onMessageCommand(evt){
-	var message=evt.data;
+function onMessage(evt){
+	var data=JSON.parse(evt.data);
+	var messageType=data.message_type;
 	var elem=document.createElement("div");
-	elem.className="receive_command";
-	elem.textContent=message;
-	elem.style.cursor="pointer";
-	elem.addEventListener("click",reflectOldCommand,false);
-	elemReceiveMessages.appendChild(elem);
-}
-function onMessageResult(evt){
-	var message=evt.data;
-	var elem=document.createElement("div");
-	elem.className="receive_result";
-	elem.textContent=message;
+	elem.className="receive_"+messageType;
+	elem.textContent=data.data;
+	if(messageType=="command"){
+		elem.style.cursor="pointer";
+		elem.addEventListener("click",reflectOldCommand,false);
+	}
 	elemReceiveMessages.appendChild(elem);
 }
 function onUnloadWindow(){
-	commandWS.close();
-	resultWS.close();
+	ws.close();
 }
 function initial(){
 	elemReceiveMessages=document.getElementById("receive_messages");
 	elemCode=document.getElementById("code");
 	var protocol=(location.protocol=="https:")?"wss":"ws";
 	var host=location.host;
-	commandWS=new WebSocket(protocol+"://"+host+"/ws/","server_side_command");
-	resultWS=new WebSocket(protocol+"://"+host+"/ws/","server_side_result");
-	commandWS.addEventListener("open",onOpenCommand,false);
-	commandWS.addEventListener("message",onMessageCommand,false);
-	resultWS.addEventListener("message",onMessageResult,false);
+	ws=new WebSocket(protocol+"://"+host+"/ws/","controller");
+	ws.addEventListener("open",onOpenCommand,false);
+	ws.addEventListener("message",onMessage,false);
 	window.addEventListener("unload",onUnloadWindow,false);
 }
 

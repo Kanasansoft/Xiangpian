@@ -5,33 +5,42 @@ import java.util.HashMap;
 
 import jline.console.ConsoleReader;
 
-import org.eclipse.jetty.websocket.WebSocket;
+import net.arnx.jsonic.JSON;
+import net.arnx.jsonic.JSONException;
+
+import com.kanasansoft.Xiangpian.Core.CONNECTION_TYPE;
+import com.kanasansoft.Xiangpian.Core.MESSAGE_TYPE;
+import com.kanasansoft.Xiangpian.Core.SendData;
 
 class CUI implements MessageListener {
 
 	private CommandLineOption options = null;
 	private ConsoleReader cons = null;
 
-	enum STYLE {COMMAND,EXTERNAL_COMMAND,RESULT,IRREGULAR_MESSAGE,END}
-
-	HashMap<Boolean,HashMap<STYLE,String>> styles=new HashMap<Boolean,HashMap<STYLE,String>>(){{
-		put(false,new HashMap<STYLE,String>(){{
-			put(STYLE.COMMAND,"");
-			put(STYLE.EXTERNAL_COMMAND,"");
-			put(STYLE.RESULT,"");
-			put(STYLE.IRREGULAR_MESSAGE,"");
-			put(STYLE.END,"");
+	@SuppressWarnings("serial")
+	HashMap<Boolean,HashMap<String,String>> styles=new HashMap<Boolean,HashMap<String,String>>(){{
+		put(false,new HashMap<String,String>(){{
+			put(MESSAGE_TYPE.COMMAND.toString(),"");
+			put(MESSAGE_TYPE.RESULT.toString(),"");
+			put(MESSAGE_TYPE.CONSOLE.toString(),"");
+			put(MESSAGE_TYPE.STATUS.toString(),"");
+			put(MESSAGE_TYPE.ERROR.toString(),"");
+			put("irregular_message","");
+			put("end","");
 		}});
-		put(true,new HashMap<STYLE,String>(){{
-			put(STYLE.COMMAND,"\u001B[32m");
-			put(STYLE.EXTERNAL_COMMAND,"\u001B[32m");
-			put(STYLE.RESULT,"\u001B[31m");
-			put(STYLE.IRREGULAR_MESSAGE,"\u001B[41m\u001B[37m");
-			put(STYLE.END,"\u001B[0m");
+		put(true,new HashMap<String,String>(){{
+			put(MESSAGE_TYPE.COMMAND.toString(),"\u001B[32m");
+			put(MESSAGE_TYPE.RESULT.toString(),"\u001B[31m");
+			put(MESSAGE_TYPE.CONSOLE.toString(),"\u001B[31m");
+			put(MESSAGE_TYPE.STATUS.toString(),"\u001B[31m");
+			put(MESSAGE_TYPE.ERROR.toString(),"\u001B[31m");
+			put("irregular_message","\u001B[41m\u001B[37m");
+			put("end","\u001B[0m");
 		}});
 	}};
 
-	HashMap<STYLE,String> style=null;
+
+	HashMap<String,String> style=null;
 
 	CUI(String[] args) throws Exception {
 
@@ -52,39 +61,52 @@ class CUI implements MessageListener {
 		String line;
 		while((line=cons.readLine())!=null){
 			if(!"".equals(line)){
-				core.onMessage("console", WebSocket.SENTINEL_FRAME, line);
+				core.onMessage(line);
 			}
 		}
 
 	}
 
 	@Override
-	public void onMessage(String connectionType, byte frame, String data) {
-		try{
-			if("console".equals(connectionType)){
-				cons.println(style.get(STYLE.COMMAND)+"command>"+style.get(STYLE.END));
-				cons.println(style.get(STYLE.COMMAND)+data+style.get(STYLE.END));
-			}else if("server_side_command".equals(connectionType)){
-				cons.println();
-				cons.println(style.get(STYLE.EXTERNAL_COMMAND)+"external command>"+style.get(STYLE.END));
-				cons.println(style.get(STYLE.EXTERNAL_COMMAND)+data+style.get(STYLE.END));
-				cons.drawLine();
-			}else if("client_side".equals(connectionType)){
-				cons.println();
-				cons.println(style.get(STYLE.RESULT)+"result>"+style.get(STYLE.END));
-				cons.println(style.get(STYLE.RESULT)+data+style.get(STYLE.END));
-				cons.drawLine();
+	public void onMessage(CONNECTION_TYPE connectionType, SendData sendData) {
+
+		String mtype=null;
+		String console=null;
+		String data=null;
+		if(connectionType==null||sendData==null||sendData.getMessageType()==null||sendData.getData()==null){
+			mtype="irregular_message";
+			console="irregular message"+
+				"(connection type:"+(connectionType==null?"null":connectionType.toString())+")"+
+				"(message type:"+((sendData==null||sendData.getMessageType()==null)?"null":sendData.getMessageType().toString())+")";
+			data=(sendData==null||sendData.getData()==null)?"sendData is null":sendData.getData();
+		}else{
+			mtype=sendData.getMessageType().toString();
+			console=mtype.toLowerCase();
+			if(MESSAGE_TYPE.RESULT.toString().equalsIgnoreCase(mtype)){
+				try {
+					data=JSON.encode(JSON.decode(sendData.getData()),true);
+				} catch (JSONException e) {
+					data=sendData.getData();
+				}
 			}else{
+				data=sendData.getData();
+			}
+		}
+
+		try{
+			if(!CONNECTION_TYPE.LISTENER.equals(connectionType)){
 				cons.println();
-				cons.println(style.get(STYLE.IRREGULAR_MESSAGE)+"irregular message(" + connectionType + ")>"+style.get(STYLE.END));
-				cons.println(style.get(STYLE.IRREGULAR_MESSAGE)+data+style.get(STYLE.END));
+			}
+			cons.println(style.get(mtype)+console+">"+style.get("end"));
+			cons.println(style.get(mtype)+data+style.get("end"));
+			if(!CONNECTION_TYPE.LISTENER.equals(connectionType)){
 				cons.drawLine();
 			}
 			cons.flush();
-		}catch(IOException e){}
+		}catch(IOException e){}catch (Exception e) {
+			System.out.println(sendData.getData());
+		}
+
 	}
 
-	@Override
-	public void onMessage(String connectionType, byte frame, byte[] data, int offset, int length) {
-	}
 }

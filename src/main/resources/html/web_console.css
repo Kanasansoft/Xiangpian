@@ -85,3 +85,24 @@ body{
 	color:#009900;
 	background-color:#ffffcc;
 }
+.receive_console{
+	border:0px none transparent;
+	border-bottom:1px solid #cccccc;
+	margin:0px;
+	color:#990099;
+	background-color:#ffffcc;
+}
+.receive_status{
+	border:0px none transparent;
+	border-bottom:1px solid #cccccc;
+	margin:0px;
+	color:#000099;
+	background-color:#ffffcc;
+}
+.receive_error{
+	border:0px none transparent;
+	border-bottom:1px solid #cccccc;
+	margin:0px;
+	color:#ff0000;
+	background-color:#ffffcc;
+}
