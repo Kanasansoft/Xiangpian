@@ -1,7 +1,12 @@
 package com.kanasansoft.Xiangpian;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+
+import org.eclipse.jetty.util.StringUtil;
+import org.mozilla.javascript.Context;
+import org.mozilla.javascript.EvaluatorException;
 
 import jline.console.ConsoleReader;
 
@@ -39,7 +44,6 @@ class CUI implements MessageListener {
 		}});
 	}};
 
-
 	HashMap<String,String> style=null;
 
 	CUI(String[] args) throws Exception {
@@ -58,10 +62,19 @@ class CUI implements MessageListener {
 		cons.setBellEnabled(false);
 		cons.setPrompt("% ");
 
+		Context cx = Context.enter();
+
+		ArrayList<String> multiline = new ArrayList<String>();
 		String line;
 		while((line=cons.readLine())!=null){
 			if(!"".equals(line)){
-				core.onMessage(line);
+				multiline.add(line);
+				String lines=Utility.joinString(multiline,StringUtil.CRLF);
+				try {
+					cx.compileString(lines, "", 1, null);
+					core.onMessage(lines);
+				} catch (EvaluatorException e) {
+				}
 			}
 		}
 
