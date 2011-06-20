@@ -3,8 +3,10 @@ package com.kanasansoft.Xiangpian;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
 
 import org.eclipse.jetty.util.StringUtil;
 import org.mozilla.javascript.Context;
@@ -48,7 +50,7 @@ class CUI implements MessageListener {
 	}};
 
 	enum COMMAND_LIST {
-		DISPLAY("display"),CLEAR("clear"),EXECUTE("execute"),EXECUTE_FORCE("execute_force"),INSERT("insert"),REPLACE("replace"),REMOVE("remove");
+		DISPLAY("display"),CLEAR("clear"),EXECUTE("execute"),EXECUTE_FORCE("execute_force"),INSERT("insert"),REPLACE("replace"),REMOVE("remove"),HELP("remove");
 		private String string;
 		private COMMAND_LIST(String string){
 			this.string=string;
@@ -73,6 +75,17 @@ class CUI implements MessageListener {
 		EXECUTE,EXECUTE_FORCE,END,NO_COMMAND;
 	}
 
+	HashMap<COMMAND_LIST,String> commandHelpList=new HashMap<COMMAND_LIST, String>(){{
+		put(COMMAND_LIST.DISPLAY,"display [startLineNumber [length]] | display multilines stack code.");
+		put(COMMAND_LIST.CLEAR,"clear | clear multilines stack code.");
+		put(COMMAND_LIST.EXECUTE,"execute | execute multilines stack code. (don't execute when parse error)");
+		put(COMMAND_LIST.EXECUTE_FORCE,"execute_force | execute multilines stack code by force. (execute even when parse error)");
+		put(COMMAND_LIST.INSERT,"insert lineNumber insertCode | insert code into specify point.");
+		put(COMMAND_LIST.REPLACE,"replace lineNumber replaceCode | replace code as specify point.");
+		put(COMMAND_LIST.REMOVE,"remove lineNumber | remove code from specify point.");
+		put(COMMAND_LIST.HELP,"help | display help.");
+	}};
+
 	HashMap<String,String> style=null;
 
 	CUI(String[] args) throws Exception {
@@ -90,6 +103,8 @@ class CUI implements MessageListener {
 		cons = new ConsoleReader();
 		cons.setBellEnabled(false);
 		cons.setPrompt("% ");
+
+		executeCommandHelp(null, cons, null);
 
 		Context cx = Context.enter();
 
@@ -155,6 +170,7 @@ class CUI implements MessageListener {
 		case INSERT:		return executeCommandInsert(argsString, cons, lines);
 		case REPLACE:		return executeCommandReplace(argsString, cons, lines);
 		case REMOVE:		return executeCommandRemove(argsString, cons, lines);
+		case HELP:			return executeCommandHelp(argsString, cons, lines);
 		default:			return COMMAND_RESULT.NO_COMMAND;
 		}
 
@@ -290,6 +306,16 @@ class CUI implements MessageListener {
 			return COMMAND_RESULT.END;
 		}
 		lines.remove(pos);
+		return COMMAND_RESULT.END;
+	}
+
+	private COMMAND_RESULT executeCommandHelp(String argsString, ConsoleReader cons, List<String> lines) throws IOException{
+		cons.println("  '"+commandStartString+"' is necessary for the command as the prefix.");
+		 List<COMMAND_LIST> keys = Arrays.asList(commandHelpList.keySet().toArray(new COMMAND_LIST[]{}));
+		Collections.sort(keys);
+		for(COMMAND_LIST key : keys){
+			cons.println("    "+commandStartString+commandHelpList.get(key));
+		}
 		return COMMAND_RESULT.END;
 	}
 
