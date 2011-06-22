@@ -6,7 +6,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 import org.eclipse.jetty.util.StringUtil;
 import org.mozilla.javascript.Context;
@@ -25,7 +24,6 @@ class CUI implements MessageListener {
 
 	private CommandLineOption options = null;
 	private ConsoleReader cons = null;
-	private static String commandStartString = ";;";
 
 	@SuppressWarnings("serial")
 	HashMap<Boolean,HashMap<String,String>> styles=new HashMap<Boolean,HashMap<String,String>>(){{
@@ -119,8 +117,8 @@ class CUI implements MessageListener {
 				COMMAND_RESULT result = COMMAND_RESULT.EXECUTE;
 
 				//command
-				if(line.startsWith(commandStartString)){
-					result = executeCommand(line, cons, multilines,commandStartString);
+				if(line.startsWith(options.getCommandPrefix())){
+					result = executeCommand(line, cons, multilines,options.getCommandPrefix());
 					cons.flush();
 				}else{
 					multilines.add(line);
@@ -151,10 +149,10 @@ class CUI implements MessageListener {
 
 	}
 
-	private COMMAND_RESULT executeCommand(String commandline,ConsoleReader cons,List<String> lines,String commandStartString) throws IOException{
+	private COMMAND_RESULT executeCommand(String commandline,ConsoleReader cons,List<String> lines,String commandPrefix) throws IOException{
 
 		//get command name and arguments string
-		String commandAndArgsString=commandline.substring(2);
+		String commandAndArgsString=commandline.substring(commandPrefix.length());
 		String[] commandAndArgsArray = commandAndArgsString.split("\\s+",2);
 		List<String> commandAndArgsList = Arrays.asList(commandAndArgsArray);
 		COMMAND_LIST command = COMMAND_LIST.get(commandAndArgsList.get(0));
@@ -317,11 +315,11 @@ class CUI implements MessageListener {
 	}
 
 	private COMMAND_RESULT executeCommandHelp(String argsString, ConsoleReader cons, List<String> lines) throws IOException{
-		cons.println("  '"+commandStartString+"' is necessary for the command as the prefix.");
+		cons.println("  '"+options.getCommandPrefix()+"' is necessary for the command as the prefix.");
 		 List<COMMAND_LIST> keys = Arrays.asList(commandHelpList.keySet().toArray(new COMMAND_LIST[]{}));
 		Collections.sort(keys);
 		for(COMMAND_LIST key : keys){
-			cons.println("    "+commandStartString+commandHelpList.get(key));
+			cons.println("    "+options.getCommandPrefix()+commandHelpList.get(key));
 		}
 		return COMMAND_RESULT.END;
 	}

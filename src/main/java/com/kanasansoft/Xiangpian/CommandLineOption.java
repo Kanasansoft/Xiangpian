@@ -13,10 +13,13 @@ interface CommandLineOption {
 	@Option(shortName="c",longName="color",description="display color")
 	boolean isColor();
 
-    @Option(shortName="s", longName="stop-external", description="stop execute external command from websocket")
-    boolean isStopExternal();
+	@Option(shortName="s", longName="stop-external", description="stop execute external command from websocket")
+	boolean isStopExternal();
 
-    @Option(helpRequest = true, shortName = "h", description = "display help")
+	@Option(longName="command-prefix",defaultValue=";;",description="specify command prefix")
+	String getCommandPrefix();
+
+	@Option(helpRequest = true, shortName = "h", description = "display help")
 	boolean getHelp();
 
 }
