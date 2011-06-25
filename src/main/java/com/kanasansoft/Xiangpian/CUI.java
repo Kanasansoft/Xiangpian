@@ -11,6 +11,7 @@ import org.mozilla.javascript.Context;
 import org.mozilla.javascript.EvaluatorException;
 
 import jline.console.ConsoleReader;
+import jline.console.completer.StringsCompleter;
 
 import net.arnx.jsonic.JSON;
 import net.arnx.jsonic.JSONException;
@@ -107,6 +108,13 @@ class CUI implements MessageListener {
 		cons.setPrompt("% ");
 
 		executeCommand(cons, Command.getCommandPrefix()+"help", null);
+
+		ArrayList<String> candidates = new ArrayList<String>();
+		for(Command command : commands){
+			candidates.add(Command.getCommandPrefix()+command.getName());
+		}
+		StringsCompleter stringsCompleter = new StringsCompleter(candidates);
+		cons.addCompleter(stringsCompleter);
 
 		Context cx = Context.enter();
 
