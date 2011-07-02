@@ -45,6 +45,28 @@ public class Core {
 		}
 	}
 
+	enum MESSAGE_FORMAT {
+		TEXT("text"),JSON("json");
+		private String string;
+		private MESSAGE_FORMAT(String string){
+			this.string=string;
+		}
+		public String toString(){
+			return string;
+		}
+		public static MESSAGE_FORMAT get(String string){
+			for(MESSAGE_FORMAT type:MESSAGE_FORMAT.values()){
+				if(type.name().equalsIgnoreCase(string)){
+					return type;
+				}
+			}
+			return null;
+		}
+		public static String getName(){
+			return "message_format";
+		}
+	}
+
 	enum CONNECTION_TYPE {
 		LISTENER("listener"),CONTROLLER("controller"),CONTROLLED("controlled");
 		private String string;
@@ -69,18 +91,24 @@ public class Core {
 
 	class SendData {
 		private MESSAGE_TYPE messageType=null;
+		private MESSAGE_FORMAT messageFormat=null;
 		private String data=null;
-		SendData(MESSAGE_TYPE messageType,String data){
+		SendData(MESSAGE_TYPE messageType,MESSAGE_FORMAT messageFormat,String data){
 			this.messageType=messageType;
+			this.messageFormat=messageFormat;
 			this.data=data;
 		}
 		SendData(String json){
 			HashMap<String,String> map=JSON.decode(json,HashMap.class);
 			this.messageType=MESSAGE_TYPE.get(map.get(MESSAGE_TYPE.getName()));
+			this.messageFormat=MESSAGE_FORMAT.get(map.get(MESSAGE_FORMAT.getName()));
 			this.data=map.get("data");
 		}
 		public MESSAGE_TYPE getMessageType() {
 			return messageType;
+		}
+		public MESSAGE_FORMAT getMessageFormat() {
+			return messageFormat;
 		}
 		public String getData() {
 			return data;
@@ -88,6 +116,7 @@ public class Core {
 		public String toString(){
 			HashMap<String, String> map = new HashMap<String,String>();
 			map.put(MESSAGE_TYPE.getName(), messageType.toString());
+			map.put(MESSAGE_FORMAT.getName(), messageFormat.toString());
 			map.put("data", data);
 			return JSON.encode(map);
 		}
@@ -142,7 +171,7 @@ public class Core {
 
 	void onMessage(String data) {
 
-		SendData sendData = new SendData(MESSAGE_TYPE.COMMAND,data);
+		SendData sendData = new SendData(MESSAGE_TYPE.COMMAND,MESSAGE_FORMAT.TEXT,data);
 		String sendString = sendData.toString();
 
 		if(listener!=null){

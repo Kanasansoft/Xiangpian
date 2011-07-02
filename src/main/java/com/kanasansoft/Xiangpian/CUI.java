@@ -18,6 +18,7 @@ import net.arnx.jsonic.JSONException;
 
 import com.kanasansoft.Xiangpian.Core.CONNECTION_TYPE;
 import com.kanasansoft.Xiangpian.Core.MESSAGE_TYPE;
+import com.kanasansoft.Xiangpian.Core.MESSAGE_FORMAT;
 import com.kanasansoft.Xiangpian.Core.SendData;
 
 class CUI implements MessageListener {
@@ -182,18 +183,21 @@ class CUI implements MessageListener {
 	public void onMessage(CONNECTION_TYPE connectionType, SendData sendData) {
 
 		String mtype=null;
+		String mformat=null;
 		String console=null;
 		String data=null;
-		if(connectionType==null||sendData==null||sendData.getMessageType()==null||sendData.getData()==null){
+		if(connectionType==null||sendData==null||sendData.getMessageType()==null||sendData.getMessageFormat()==null||sendData.getData()==null){
 			mtype="irregular_message";
 			console="irregular message"+
 				"(connection type:"+(connectionType==null?"null":connectionType.toString())+")"+
-				"(message type:"+((sendData==null||sendData.getMessageType()==null)?"null":sendData.getMessageType().toString())+")";
+				"(message type:"+((sendData==null||sendData.getMessageType()==null)?"null":sendData.getMessageType().toString())+")"+
+				"(message format:"+((sendData==null||sendData.getMessageFormat()==null)?"null":sendData.getMessageFormat().toString())+")";
 			data=(sendData==null||sendData.getData()==null)?"sendData is null":sendData.getData();
 		}else{
 			mtype=sendData.getMessageType().toString();
+			mformat=sendData.getMessageFormat().toString();
 			console=mtype.toLowerCase();
-			if(MESSAGE_TYPE.RESULT.toString().equalsIgnoreCase(mtype)){
+			if(MESSAGE_FORMAT.JSON.toString().equalsIgnoreCase(mformat)){
 				try {
 					data=JSON.encode(JSON.decode(sendData.getData()),true);
 				} catch (JSONException e) {

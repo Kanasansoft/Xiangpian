@@ -69,7 +69,7 @@
 					"method name":key,
 					"arguments":args
 				});
-				send("console",json);
+				send("console","json",json);
 				return result||args;
 			};
 		};
@@ -83,10 +83,11 @@
 		return;
 	}
 
-	function send(messageType,data){
+	function send(messageType,messageFormat,data){
 		ws.send(JSON.stringify(
 			{
 				"message_type":messageType,
+				"message_format":messageFormat,
 				"data":data
 			}
 		));
@@ -94,16 +95,16 @@
 
 	//setting websocket
 	function onOpenWebSocket(){
-		send("status","open");
+		send("status","text","open");
 	}
 	function onMessageWebSocket(evt){
 		var data=JSON.parse(evt.data);
 		if(data.message_type!="command"){return;}
 		var command=data.data;
 		try{
-			send("result",JSON.stringify(eval.call(window,command)));
+			send("result","json",JSON.stringify(eval.call(window,command)));
 		}catch(e){
-			send("error",e.toString());
+			send("error","text",e.toString());
 		}
 	}
 	function onUnloadWindow(){

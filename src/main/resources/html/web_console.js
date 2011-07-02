@@ -18,17 +18,18 @@ function getParameters(){
 	}
 	return data;
 }
-function send(messageType,data){
+function send(messageType,messageFormat,data){
 	ws.send(JSON.stringify(
 		{
 			"message_type":messageType,
+			"message_format":messageFormat,
 			"data":data
 		}
 	));
 }
 function sendCode(){
 	if(elemCode.value!=""){
-		send("command",elemCode.value);
+		send("command","text",elemCode.value);
 		elemCode.value="";
 	}
 	elemCode.focus();
