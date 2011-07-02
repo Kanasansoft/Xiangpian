@@ -23,7 +23,7 @@ import org.eclipse.jetty.websocket.WebSocketServlet;
 
 public class Core {
 
-	enum MESSAGE_TYPE {
+	public enum MESSAGE_TYPE {
 		COMMAND("command"),RESULT("result"),CONSOLE("console"),STATUS("status"),ERROR("error");
 		private String string;
 		private MESSAGE_TYPE(String string){
@@ -45,7 +45,7 @@ public class Core {
 		}
 	}
 
-	enum MESSAGE_FORMAT {
+	public enum MESSAGE_FORMAT {
 		TEXT("text"),JSON("json");
 		private String string;
 		private MESSAGE_FORMAT(String string){
@@ -67,7 +67,7 @@ public class Core {
 		}
 	}
 
-	enum CONNECTION_TYPE {
+	public enum CONNECTION_TYPE {
 		LISTENER("listener"),CONTROLLER("controller"),CONTROLLED("controlled");
 		private String string;
 		private CONNECTION_TYPE(String string){
@@ -89,7 +89,7 @@ public class Core {
 		}
 	}
 
-	class SendData {
+	public class SendData {
 		private MESSAGE_TYPE messageType=null;
 		private MESSAGE_FORMAT messageFormat=null;
 		private String data=null;
@@ -311,6 +311,10 @@ public class Core {
 			servlet.onMessage(this, frame, data, offset, length);
 		}
 
+	}
+
+	public interface MessageListener {
+		void onMessage(CONNECTION_TYPE connectionType, SendData data);
 	}
 
 }

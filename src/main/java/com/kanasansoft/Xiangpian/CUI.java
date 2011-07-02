@@ -20,6 +20,7 @@ import com.kanasansoft.Xiangpian.Core.CONNECTION_TYPE;
 import com.kanasansoft.Xiangpian.Core.MESSAGE_TYPE;
 import com.kanasansoft.Xiangpian.Core.MESSAGE_FORMAT;
 import com.kanasansoft.Xiangpian.Core.SendData;
+import com.kanasansoft.Xiangpian.Core.MessageListener;
 
 class CUI implements MessageListener {
 

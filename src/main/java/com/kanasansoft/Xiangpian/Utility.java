@@ -7,7 +7,7 @@ import java.util.List;
 import uk.co.flamingpenguin.jewel.cli.ArgumentValidationException;
 import uk.co.flamingpenguin.jewel.cli.CliFactory;
 
-public class Utility {
+class Utility {
 
 	static boolean equalsWithNull(Object a, Object b) {
 		if(a==null&&b==null){
