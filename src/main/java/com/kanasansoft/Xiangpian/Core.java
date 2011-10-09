@@ -182,7 +182,7 @@ public class Core {
 
 	}
 
-	void onMessageFromWebSocket(String connectionType, byte frame, String data) {
+	void onMessageFromWebSocket(String connectionType, String data) {
 
 		SendData sendData=null;
 
@@ -210,7 +210,7 @@ public class Core {
 
 	}
 
-	void onMessageFromWebSocket(String connectionType, byte frame, byte[] data, int offset, int length) {
+	void onMessageFromWebSocket(String connectionType, byte[] data, int offset, int length) {
 	}
 
 	class WebSocketServletWithConnectionType extends WebSocketServlet {
@@ -227,7 +227,7 @@ public class Core {
 		}
 
 		@Override
-		protected WebSocket doWebSocketConnect(HttpServletRequest request, String connectionType) {
+		public WebSocket doWebSocketConnect(HttpServletRequest request, String connectionType) {
 			return new WebSocketWithConnectionType(this, connectionType);
 		}
 
@@ -239,12 +239,12 @@ public class Core {
 			clients.remove(webSocketWithConnectionType);
 		}
 
-		void onMessage(WebSocketWithConnectionType webSocketWithConnectionType, byte frame, String data) {
-			Core.this.onMessageFromWebSocket(webSocketWithConnectionType.getConnectionType(), frame, data);
+		void onMessage(WebSocketWithConnectionType webSocketWithConnectionType, String data) {
+			Core.this.onMessageFromWebSocket(webSocketWithConnectionType.getConnectionType(), data);
 		}
 
-		void onMessage(WebSocketWithConnectionType webSocketWithConnectionType, byte frame, byte[] data, int offset, int length) {
-			Core.this.onMessageFromWebSocket(webSocketWithConnectionType.getConnectionType(), frame, data, offset, length);
+		void onMessage(WebSocketWithConnectionType webSocketWithConnectionType, byte[] data, int offset, int length) {
+			Core.this.onMessageFromWebSocket(webSocketWithConnectionType.getConnectionType(), data, offset, length);
 		}
 
 		void sendMessageAll(String data) {
@@ -263,10 +263,10 @@ public class Core {
 
 	}
 
-	class WebSocketWithConnectionType implements WebSocket {
+	class WebSocketWithConnectionType implements WebSocket.OnTextMessage {
 
 		private WebSocketServletWithConnectionType servlet = null;
-		private Outbound outbound;
+		private Connection connection;
 		private String connectionType = null;
 
 		WebSocketWithConnectionType(WebSocketServletWithConnectionType servlet, String connectionType) {
@@ -280,9 +280,9 @@ public class Core {
 		}
 
 		boolean sendMessage(String data) {
-			if(outbound==null){return false;}
+			if(connection==null){return false;}
 			try {
-				outbound.sendMessage(data);
+				connection.sendMessage(data);
 			} catch (IOException e) {
 				e.printStackTrace();
 				return false;
@@ -291,24 +291,19 @@ public class Core {
 		}
 
 		@Override
-		public void onConnect(Outbound outbound) {
-			this.outbound = outbound;
+		public void onOpen(Connection connection) {
+			this.connection = connection;
 			servlet.onConnect(this);
 		}
 
 		@Override
-		public void onDisconnect() {
+		public void onClose(int closeCode, String message) {
 			servlet.onDisconnect(this);
 		}
 
 		@Override
-		public void onMessage(byte frame, String data) {
-			servlet.onMessage(this, frame, data);
-		}
-
-		@Override
-		public void onMessage(byte frame, byte[] data, int offset, int length) {
-			servlet.onMessage(this, frame, data, offset, length);
+		public void onMessage(String data) {
+			servlet.onMessage(this, data);
 		}
 
 	}
